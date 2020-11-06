@@ -10,6 +10,7 @@ const withQuery = require('with-query').default
 const PORT = parseInt(process.argv[2]) || parseInt(process.env_PORT) || 3000
 const SQL_GET_ALPHABET = `SELECT * FROM book2018 WHERE TITLE LIKE ? limit 10`
 const SQL_GET_TITLES = 'select * from book2018 where book_id = ?'
+const SQL_GET_PAGES = 'select count (*) as total from book2018 where title like ?'
 const ENDPOINT = 'https://api.nytimes.com/svc/books/v3/reviews.json'
 const PUBLIC = process.env.API_PUBLIC
 const PRIVATE = process.env.API_PRIVATE
@@ -44,7 +45,8 @@ app.get('/landing', async (req, res) => {
     const conn = await pool.getConnection()
     try {
         const sqlQuery = await pool.query(SQL_GET_ALPHABET, [req.query.letter+'%' , 100])
-
+        const [pages] = await pool.query(SQL_GET_PAGES, [req.query.letter+'%'])
+        console.log(pages)
         res.status(200)
         res.type('text/html')
         res.render('landing', { results: sqlQuery[0] })
