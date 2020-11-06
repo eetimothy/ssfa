@@ -10,12 +10,10 @@ const withQuery = require('with-query').default
 const PORT = parseInt(process.argv[2]) || parseInt(process.env_PORT) || 3000
 const SQL_GET_ALPHABET = `SELECT * FROM book2018 WHERE TITLE LIKE '%' limit 10`
 const SQL_GET_TITLES = 'select * from book2018 where book_id = ?'
-const ENDPOINT = 'https://developer.nytimes.com/docs/books-product/1routes/reviews.json'
+const ENDPOINT = 'https://api.nytimes.com/svc/books/v3/reviews.json'
 const PUBLIC = process.env.API_PUBLIC
 const PRIVATE = process.env.API_PRIVATE
 const APP_ID = 'f815e67c-8998-4be9-a718-6836ed9d77d8'
-
-
 
 // declare database, create connection pool
 const pool = mysql.createPool({
@@ -96,20 +94,25 @@ app.get('/books/:book_id', async (req, res) => {
 
 //API Application
 app.get('/reviews', async (req, res) => {
-    const title = await pool.query(SQL_GET_ALPHABET, ['title'], 10)
-    const rev = await fetch(withQuery(
+    const conn = await pool.getConnection()
+    const [book] = await pool.query(SQL_GET_TITLES, [req.query.book_id])
+    
+    const url = await fetch(withQuery(
         ENDPOINT, 
         {
-            title,
-            'api-key': PUBLIC,           
+            title: book[0]['title'],
+            'api-key': PUBLIC
         }
-    ))
-    const revJson = await rev.json()
 
-    res.status(200)
-    res.type('text/html')
-    res.render('landing', {results: revJson.data.results})
+    ))
+    const result = await url.json()
+    
+        res.status(200)
+        res.type('text/html')
+        res.render('reviews', {result: url})
+    
 })
+
 
 
 //start server
