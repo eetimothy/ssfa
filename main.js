@@ -8,7 +8,7 @@ const withQuery = require('with-query').default
 
 //declare const
 const PORT = parseInt(process.argv[2]) || parseInt(process.env_PORT) || 3000
-const SQL_GET_ALPHABET = `SELECT * FROM book2018 WHERE TITLE LIKE '%' limit 10`
+const SQL_GET_ALPHABET = `SELECT * FROM book2018 WHERE TITLE LIKE ? limit 10`
 const SQL_GET_TITLES = 'select * from book2018 where book_id = ?'
 const ENDPOINT = 'https://api.nytimes.com/svc/books/v3/reviews.json'
 const PUBLIC = process.env.API_PUBLIC
@@ -36,27 +36,18 @@ app.set('view engine', 'hbs')
 
 //application
 
+
+
 app.get('/landing', async (req, res) => {
-    const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
-    const num = "0123456789".split("")
-
-    res.status(200)
-    res.type('text/html')
-    res.render('landing', {abc: 'abc'})
-})
-
-
-app.get('/', async (req, res) => {
 
     //get list of books
     const conn = await pool.getConnection()
     try {
-        const sqlQuery = await pool.query(SQL_GET_ALPHABET, ['title', 100])
-
+        const sqlQuery = await pool.query(SQL_GET_ALPHABET, [req.query.letter+'%' , 100])
 
         res.status(200)
         res.type('text/html')
-        res.render('index', { results: sqlQuery[0] })
+        res.render('landing', { results: sqlQuery[0] })
     }
 
     catch (e) {
@@ -68,6 +59,15 @@ app.get('/', async (req, res) => {
     finally {
         conn.release()
     }
+})
+
+app.get('/', async (req, res) => {
+    const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
+    const num = "0123456789".split("")
+
+    res.status(200)
+    res.type('text/html')
+    res.render('index', {abc, num})
 })
 
 app.get('/books/:book_id', async (req, res) => {
@@ -112,8 +112,6 @@ app.get('/reviews', async (req, res) => {
         res.render('reviews', {result: url})
     
 })
-
-
 
 //start server
 app.listen(PORT, () => {
