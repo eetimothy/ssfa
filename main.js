@@ -15,6 +15,8 @@ const PUBLIC = process.env.API_PUBLIC
 const PRIVATE = process.env.API_PRIVATE
 const APP_ID = 'f815e67c-8998-4be9-a718-6836ed9d77d8'
 
+
+
 // declare database, create connection pool
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -38,7 +40,7 @@ app.set('view engine', 'hbs')
 
 app.get('/landing', async (req, res) => {
     const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
-
+    const num = "0123456789".split("")
 
     res.status(200)
     res.type('text/html')
@@ -94,19 +96,19 @@ app.get('/books/:book_id', async (req, res) => {
 
 //API Application
 app.get('/reviews', async (req, res) => {
+    const title = await pool.query(SQL_GET_ALPHABET, ['title'], 10)
     const rev = await fetch(withQuery(
         ENDPOINT, 
         {
             title,
-            'api-key': PUBLIC,
-            'yourkey': PRIVATE            
+            'api-key': PUBLIC,           
         }
     ))
-    const revJSON = await rev.json.data.results
+    const revJson = await rev.json()
 
     res.status(200)
     res.type('text/html')
-    res.render('landing', {results: revJSON.data.results})
+    res.render('landing', {results: revJson.data.results})
 })
 
 
